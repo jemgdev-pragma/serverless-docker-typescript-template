@@ -61,14 +61,23 @@ jobs:
       - name: Check if ECS service exists
         id: check-service
         run: |
-          echo "🔍 Check if service '$SERVICE_NAME' exists..."
-          SERVICE_ARN=$(aws ecs list-services --cluster $CLUSTER_NAME --query "serviceArns[]" --output text)
-          if echo "$SERVICE_ARN" | grep -q "$SERVICE_NAME"; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Service found."
+          echo "🔍 Check if service '$SERVICE_NAME' exists in cluster '$CLUSTER_NAME'..."
+          SERVICE_ARNS=$(aws ecs list-services --cluster "$CLUSTER_NAME" --query "serviceArns[]" --output text)
+          
+          SERVICE_EXISTS=false
+          for ARN in $SERVICE_ARNS; do
+            SERVICE_NAME_IN_ARN=$(basename "$ARN")
+            if [ "$SERVICE_NAME_IN_ARN" = "$SERVICE_NAME" ]; then
+              SERVICE_EXISTS=true
+              break
+            fi
+          done
+
+          echo "exists=$SERVICE_EXISTS" >> $GITHUB_OUTPUT
+          if [ "$SERVICE_EXISTS" = true ]; then
+            echo "✅ Service found: $SERVICE_NAME"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Service not found, deploying with Serverless."
+            echo "⚠️ Service not found: $SERVICE_NAME"
           fi
 
       - name: Update ECS Service
