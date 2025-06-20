@@ -116,7 +116,7 @@ jobs:
 
           echo "📦 Deploying with Serverless..."
           serverless deploy --verbose --stage prod \
-            --param "stage=dev" \
+            --param "stage=prod" \
             --param "port=3000" \
             --param "expose_port=3000" \
             --param "vpc_id=${{ secrets.VPC_ID }}" \
