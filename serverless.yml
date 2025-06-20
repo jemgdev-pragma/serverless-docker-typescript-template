@@ -78,26 +78,6 @@ resources:
             Environment:
               - Name: PORT
                 Value: ${param:port}
-              - Name: SECRET_SESSION
-                Value: ${param:secret_session}
-              - Name: DATABASE_HOST
-                Value: ${param:database_host}
-              - Name: DATABASE_PORT
-                Value: ${param:database_port}
-              - Name: DATABASE_USERNAME
-                Value: ${param:database_username}
-              - Name: DATABASE_PASSWORD
-                Value: ${param:database_password}
-              - Name: DATABASE_NAME
-                Value: ${param:database_name}
-              - Name: CLOUDINARY_CLOUD_NAME
-                Value: ${param:cloudinary_cloud_name}
-              - Name: CLOUDINARY_API_KEY
-                Value: ${param:cloudinary_api_key}
-              - Name: CLOUDINARY_API_SECRET
-                Value: ${param:cloudinary_api_secret}
-              - Name: ERROR_UPLOAD_IMAGE
-                Value: ${param:error_upload_image}
 
     TaskExecutionRole:
       Type: AWS::IAM::Role

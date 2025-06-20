@@ -61,7 +61,7 @@ jobs:
       - name: Check if ECS service exists
         id: check-service
         env:
-          AWS_REGION: us-east-1 # o la región que uses
+          AWS_REGION: ${{ env.AWS_REGION }}
         run: |
           echo "🔍 Verificando existencia del servicio '$SERVICE_NAME' en el clúster '$CLUSTER_NAME'..."
 
