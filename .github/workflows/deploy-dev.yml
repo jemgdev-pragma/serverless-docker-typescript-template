@@ -62,8 +62,10 @@ jobs:
         id: check-service
         run: |
           echo "🔍 Check if service '$SERVICE_NAME' exists in cluster '$CLUSTER_NAME'..."
-          SERVICE_ARNS=$(aws ecs list-services --cluster "$CLUSTER_NAME" --query "serviceArns[]" --output text)
           
+          SERVICE_ARNS=$(aws ecs list-services --cluster "$CLUSTER_NAME" --query "serviceArns[]" --output text)
+          echo "SERVICE_ARNS: $SERVICE_ARNS"
+
           SERVICE_EXISTS=false
           for ARN in $SERVICE_ARNS; do
             SERVICE_NAME_IN_ARN=$(basename "$ARN")
