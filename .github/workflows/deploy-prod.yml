@@ -115,7 +115,7 @@ jobs:
           npm install -g serverless@3
 
           echo "📦 Deploying with Serverless..."
-          serverless deploy --verbose \
+          serverless deploy --verbose --stage prod \
             --param "stage=dev" \
             --param "port=3000" \
             --param "expose_port=3000" \
