@@ -45,11 +45,11 @@ resources:
 
     FargateService:
       Type: AWS::ECS::Service
-      DependsOn: LoveReminderTaskDefinition
+      DependsOn: TaskDefinition
       Properties:
         ServiceName: template-ecs-service-${param:stage}
         LaunchType: FARGATE
-        Cluster: !Ref LoveReminderCluster
+        Cluster: !Ref Cluster
         DesiredCount: 1
         NetworkConfiguration:
           AwsvpcConfiguration:
