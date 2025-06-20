@@ -77,8 +77,8 @@
     const getListOfUsers = async () => {
       try {
         const response = await fetch('/api/v1/users');
-        if (!response.ok) throw new Error('Error al obtener usuarios');
-        return await response.json();
+        const data = await response.json();
+        return data.data
       } catch (err) {
         console.error('❌ Error:', err);
         return [];
