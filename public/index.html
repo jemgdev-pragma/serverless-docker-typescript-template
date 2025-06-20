@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista de Usuarios</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      max-width: 900px;
+      margin: 2rem auto;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    thead {
+      background-color: #4a63f2;
+      color: #fff;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    tr:hover {
+      background-color: #f0f2f5;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lista de Usuarios</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Avatar</th>
+        <th>Username</th>
+        <th>ID</th>
+      </tr>
+    </thead>
+    <tbody id="users-table-body">
+      <tr>
+        <td colspan="4" class="center">Cargando usuarios...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    const getListOfUsers = async () => {
+      try {
+        const response = await fetch('/api/v1/users');
+        const data = await response.json();
+        return data.data
+      } catch (err) {
+        console.error('❌ Error:', err);
+        return [];
+      }
+    };
+
+    const renderUsers = (users) => {
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = '';
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="center">No hay usuarios registrados.</td></tr>';
+        return;
+      }
+
+      users.forEach((user, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td><img src="${user.avatar || 'https://via.placeholder.com/40'}" class="avatar" alt="Avatar" /></td>
+          <td>${user.username}</td>
+          <td>${user.id}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
+    (async () => {
+      const users = await getListOfUsers();
+      renderUsers(users);
+    })();
+  </script>
+</body>
+</html>

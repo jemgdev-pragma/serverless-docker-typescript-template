@@ -1,0 +1,94 @@
+service: serverless-docker-typescript-template
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  region: us-east-1
+  deploymentMethod: direct
+  architecture: x86_64
+  environment:
+    STAGE: ${param:stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ecr:*
+            - logs:*
+          Resource: "*"
+
+  vpc:
+    securityGroupIds:
+      - Fn::GetAtt: [SecurityGroup, GroupId]
+    subnetIds:
+      - subnet-024b661bd87d00650
+
+resources:
+  Resources:
+
+    Cluster:
+      Type: AWS::ECS::Cluster
+      Properties:
+        ClusterName: template-cluster-${param:stage}
+
+    SecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: allow-public-trafic
+        VpcId: ${param:vpc_id}
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: ${param:port}
+            ToPort: ${param:expose_port}
+            CidrIp: 0.0.0.0/0
+
+    FargateService:
+      Type: AWS::ECS::Service
+      DependsOn: TaskDefinition
+      Properties:
+        ServiceName: template-ecs-service-${param:stage}
+        LaunchType: FARGATE
+        Cluster: !Ref Cluster
+        DesiredCount: 1
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            Subnets:
+              - ${param:subnet_id}
+            SecurityGroups:
+              - Ref: SecurityGroup
+            AssignPublicIp: ENABLED
+        TaskDefinition: !Ref TaskDefinition
+
+    TaskDefinition:
+      Type: AWS::ECS::TaskDefinition
+      Properties:
+        Family: template-task-${param:stage}
+        RequiresCompatibilities: [FARGATE]
+        Cpu: '256'
+        Memory: '512'
+        NetworkMode: awsvpc
+        ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+        ContainerDefinitions:
+          - Name: template-container
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/template-image-${param:stage}:latest"
+            PortMappings:
+              - ContainerPort: ${param:port}
+                HostPort: ${param:expose_port}
+            Environment:
+              - Name: PORT
+                Value: ${param:port}
+
+    TaskExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: template-task-${param:stage}-execution-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: ecs-tasks.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
