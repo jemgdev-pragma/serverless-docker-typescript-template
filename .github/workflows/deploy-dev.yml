@@ -1,0 +1,99 @@
+name: Deploy Love Reminder to AWS
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: template-image-dev
+  IMAGE_TAG: latest
+  CLUSTER_NAME: template-cluster-dev
+  SERVICE_NAME: template-ecs-service-dev
+  ENVIRONMENT: dev
+
+jobs:
+  deploy:
+    environment: dev
+    name: Build and Deploy to ECS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Docker availability
+        run: docker --version
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create ECR repository if it doesn't exist
+        run: |
+          echo "📦 Check if ECR '$ECR_REPOSITORY' exists..."
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region $AWS_REGION >/dev/null 2>&1 || {
+            echo "🔧 Repository not found. Creating '$ECR_REPOSITORY'..."
+            aws ecr create-repository --repository-name "$ECR_REPOSITORY" --region $AWS_REGION
+          }
+
+      - name: Login to Amazon ECR
+        run: |
+          echo "🔐 Login in ECR..."
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+      - name: Build, Tag, and Push Docker image to ECR
+        run: |
+          set -e
+          IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          echo "🔧 Build image: $IMAGE_URI"
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $IMAGE_URI
+
+          docker push $IMAGE_URI
+
+      - name: Check if ECS service exists
+        id: check-service
+        run: |
+          echo "🔍 Check if service '$SERVICE_NAME' exists..."
+          SERVICE_ARN=$(aws ecs list-services --cluster $CLUSTER_NAME --query "serviceArns[]" --output text)
+          if echo "$SERVICE_ARN" | grep -q "$SERVICE_NAME"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Service found."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Service not found, deploying with Serverless."
+          fi
+
+      - name: Update ECS Service
+        if: steps.check-service.outputs.exists == 'true'
+        run: |
+          echo "♻️ Update ECS service..."
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --force-new-deployment \
+            --region $AWS_REGION || {
+              echo "❌ Error in ECS service update."
+              exit 1
+            }
+
+      - name: Deploy using Serverless Framework
+        if: steps.check-service.outputs.exists == 'false'
+        run: |
+          echo "🚀 Install Serverless CLI..."
+          npm install -g serverless@3
+
+          echo "📦 Deploying with Serverless..."
+          serverless deploy --verbose \
+            --param "stage=dev" \
+            --param "port=3000" \
+            --param "expose_port=3000" \
+            --param "vpc_id=${{ secrets.VPC_ID }}" \
+            --param "subnet_id=${{ secrets.SUBNET_ID }}"
