@@ -60,16 +60,39 @@ jobs:
 
       - name: Check if ECS service exists
         id: check-service
+        env:
+          AWS_REGION: us-east-1 # o la región que uses
         run: |
-          echo "🔍 Check if service '$SERVICE_NAME' exists..."
-          SERVICE_ARN=$(aws ecs list-services --cluster $CLUSTER_NAME --query "serviceArns[]" --output text)
-          echo "$SERVICE_ARN"
-          if echo "$SERVICE_ARN" | grep -q "$SERVICE_NAME"; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Service found."
-          else
+          echo "🔍 Verificando existencia del servicio '$SERVICE_NAME' en el clúster '$CLUSTER_NAME'..."
+
+          # Verifica que el cluster exista
+          CLUSTERS=$(aws ecs list-clusters --region "$AWS_REGION" --output text)
+          if ! echo "$CLUSTERS" | grep -q "$CLUSTER_NAME"; then
+            echo "❌ El clúster '$CLUSTER_NAME' no existe."
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Service not found, deploying with Serverless."
+            exit 0
+          fi
+
+          # Obtiene todos los servicios del cluster
+          SERVICE_ARNS=$(aws ecs list-services --cluster "$CLUSTER_NAME" --region "$AWS_REGION" --query "serviceArns[]" --output text)
+          echo "📋 Servicios encontrados:"
+          echo "$SERVICE_ARNS"
+
+          SERVICE_EXISTS=false
+          for ARN in $SERVICE_ARNS; do
+            SERVICE_NAME_IN_ARN=$(basename "$ARN")
+            if [ "$SERVICE_NAME_IN_ARN" = "$SERVICE_NAME" ]; then
+              SERVICE_EXISTS=true
+              break
+            fi
+          done
+
+          echo "exists=$SERVICE_EXISTS" >> $GITHUB_OUTPUT
+
+          if [ "$SERVICE_EXISTS" = true ]; then
+            echo "✅ Servicio encontrado: $SERVICE_NAME"
+          else
+            echo "⚠️ Servicio no encontrado: $SERVICE_NAME. Se procederá con el despliegue inicial."
           fi
 
       - name: Update ECS Service
