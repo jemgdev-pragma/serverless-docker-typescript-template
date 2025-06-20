@@ -22,7 +22,7 @@ provider:
     securityGroupIds:
       - Fn::GetAtt: [SecurityGroup, GroupId]
     subnetIds:
-      - subnet-024b661bd87d00650
+      - ${param:subnet_id}
 
 resources:
   Resources:
