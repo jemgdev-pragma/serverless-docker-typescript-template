@@ -1,8 +1,8 @@
 import express, { Express } from 'express'
-import { notFound } from './middlewares/not-found'
-import { errorHandler } from './middlewares/error-handler'
-import { userRouter } from './routes/user.routes'
-import { Constants } from './contants'
+import { notFound } from '@middlewares/not-found'
+import { errorHandler } from '@middlewares/error-handler'
+import { userRouter } from '@handler/user.routes'
+import { Constants } from '@config/contants'
 
 const serverConfig = (app: Express): Express => {
   app.set('PORT', Constants.PORT || 3000)
