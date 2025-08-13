@@ -1,6 +1,6 @@
 # Arquetipo NodeJs - Express con docker y serverless
 
-Aplicación express con Serverless Framework para la creación y despliegue de los contenedores en una cuenta de AWS. El proyecto cuenta con varias tecnologias de despliegue, ya sea Serverless Framework, Azure Pipelines, GitHub Actions y Terraform con el fin de desplegar la infraestructura base para ejecutar contenedores. La idea es que podamos habilitar dicha infraestructura base para poder crear contenedores y despegarlos en AWS de forma automatizada.
+Aplicación express con Serverless Framework y Terraform para la creación y despliegue de los contenedores en una cuenta de AWS. El proyecto cuenta con Serverless Framework y Terraform preconfigurados con el fin de desplegar la infraestructura base para ejecutar contenedores. La idea es que podamos habilitar dicha infraestructura base para poder crear contenedores y despegarlos en AWS de forma automatizada.
 
 ## Arquitectura de la solución
 
@@ -188,7 +188,7 @@ en el siguiente link: [Arquitectura de capas](https://github.com/somospragma/bac
 └── tsconfig.json
 ```
 
-## Desplegar la aplicación de ejemplo
+## Desplegar la aplicación de ejemplo (Usando Serverless Framework)
 
 Este proyecto utiliza como estrategia de branching **Trunk-Based Development**, donde todas las nuevas funcionalidades se integran directamente sobre la rama principal (`main`) mediante *pull requests* pequeños y frecuentes.
 
@@ -239,8 +239,8 @@ aws ecs update-service \
     }
 ```
 
-### 9. Despliegue inicial con Serverless Framework (si no existe)
-Si el servicio está creado, se fuerza una nueva implementación usando:
+### 9. Despliegue inicial con Serverless Framework (si no existe ECS)
+Si el ECS no existe, se levanta toda la infraestructura usando Serverless Framework:
 
 ```bash
 echo "🚀 Install Serverless CLI..."
@@ -252,5 +252,6 @@ serverless deploy --config serverless/serverless.yml --verbose --stage dev \
 --param "vpc_id=${{ secrets.VPC_ID }}" \
 --param "subnet_id=${{ secrets.SUBNET_ID }}"
 ```
+Nota: Si se piensa utilizar terraform deberá modificar solamente esta parte del pipeline en los workflows de github o pipeline de azure dependiendo cual se esté utilizando.
 
 Finalmente podras visualizar en ECS el cluster de Fargate donde se está ejecutando el contenedor. Muy importante tener en cuenta que hay que esperar un cierto tiempo para que AWS pueda entregar la IPv4 del contenedor y así poder hacer las pruebas necesarias.
