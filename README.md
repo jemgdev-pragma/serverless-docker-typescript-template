@@ -1,6 +1,6 @@
 # Arquetipo NodeJs - Express con docker y serverless
 
-Aplicación express con Serverless Framework para la creación y despliegue de los contenedores en una cuenta de AWS. El proyecto cuenta con varias tecnologias de despliegue, ya sea Serverless Framework, Azure Pipelines, GitHub Actions y Terraform. La idea es que podamos habilitar de forma automatica la infraestructura necesaria para poder crear contenedores y despegarlos en AWS de forma automatizada.
+Aplicación express con Serverless Framework para la creación y despliegue de los contenedores en una cuenta de AWS. El proyecto cuenta con varias tecnologias de despliegue, ya sea Serverless Framework, Azure Pipelines, GitHub Actions y Terraform con el fin de desplegar la infraestructura base para ejecutar contenedores. La idea es que podamos habilitar dicha infraestructura base para poder crear contenedores y despegarlos en AWS de forma automatizada.
 
 ## Arquitectura de la solución
 
