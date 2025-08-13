@@ -101,8 +101,7 @@ jobs:
           echo "🚀 Install Serverless CLI..."
           npm install -g serverless@3
           echo "📦 Deploying with Serverless..."
-          serverless deploy --verbose --stage prod \
-            --param "stage=prod" \
+          serverless deploy --config serverless/serverless.yml --verbose --stage prod \
             --param "port=3000" \
             --param "expose_port=3000" \
             --param "vpc_id=${{ secrets.VPC_ID }}" \

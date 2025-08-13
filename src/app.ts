@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
 config()
 import express from 'express'
-import { serverConfig } from '@libraries/express.config'
+import { serverConfig } from '@config/express.config'
 
 const app = express()
 const server = serverConfig(app)

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import LambdaLogger from '@libraries/logger';
+import LambdaLogger from '@config/logger';
 
 export const errorHandler = (error: any, _request: Request, response: Response, _next: NextFunction) => {
   const err = error as Error

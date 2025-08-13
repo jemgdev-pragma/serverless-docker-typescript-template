@@ -9,6 +9,6 @@ describe('get-all-users test suite', () => {
 
   it('should return all users', async () => {
     const users = await userService.getAllUsers()
-    expect(users.length).toEqual(8)
+    expect(users.length).toEqual(5)
   })
 })

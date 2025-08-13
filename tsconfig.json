@@ -14,6 +14,7 @@
       "@libraries/*": ["src/libraries/*"],
       "@middlewares/*": ["src/middlewares/*"],
       "@models/*": ["src/models/*"],
+      "@controllers/*": ["src/controllers/*"],
       "@services/*": ["src/services/*"]
     },
     "strict": true,

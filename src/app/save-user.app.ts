@@ -1,5 +1,5 @@
 import { requestSaveUserSchema } from '@config/schema/save-user.schema'
-import LambdaLogger from '@libraries/logger'
+import LambdaLogger from '@config/logger'
 import { UserModel } from '@models/user.model'
 import { UserMemoryService } from "@services/user-memory.service"
 
@@ -8,20 +8,13 @@ export class SaveUserApp {
 
   async invoke (user: Pick<UserModel, 'username' | 'password' | 'avatar'>) {
     try {
-      const { error, value } = requestSaveUserSchema.validate(user)
+      const validatedData = requestSaveUserSchema.parse(user)
 
       LambdaLogger.info({
         code: 'VALIDATE_SAVE_USER',
-        message: 'Validate save user',
-        metadata: {
-          value,
-          error: error?.message || 'No errors'
-        }
+        message: 'Validate save user data',
+        metadata: validatedData
       })
-
-      if (error) {
-        throw error
-      }
 
       await this.userService.saveUser({
         ...user,

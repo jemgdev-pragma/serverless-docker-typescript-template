@@ -8,7 +8,7 @@ provider:
   deploymentMethod: direct
   architecture: x86_64
   environment:
-    STAGE: ${param:stage}
+    STAGE: ${opt:stage}
   iam:
     role:
       statements:
