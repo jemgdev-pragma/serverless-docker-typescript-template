@@ -124,6 +124,12 @@ en el siguiente link: [Arquitectura de capas](https://github.com/somospragma/bac
 
 ```bash
 .
+├── .github
+│   └── workflows
+│       ├── deploy-dev.yml
+│       └── deploy-prod.yml
+├── public
+│   └── index.html
 ├── serverless
 │   └── serverless.yml
 ├── terraform
@@ -140,8 +146,6 @@ en el siguiente link: [Arquitectura de capas](https://github.com/somospragma/bac
 │   │       └── variables.tf
 │   ├── provider.tf
 │   └── variables.tf
-├── public
-│   └── index.html
 ├── src
 │   ├── app
 │   │   ├── get-all-users.app.ts
@@ -150,7 +154,6 @@ en el siguiente link: [Arquitectura de capas](https://github.com/somospragma/bac
 │   │       └── unit
 │   │           ├── get-all-users.app.test.ts
 │   │           └── save-user.app.test.ts
-│   ├── app.ts
 │   ├── config
 │   │   ├── contants.ts
 │   │   ├── express.config.ts
@@ -168,15 +171,18 @@ en el siguiente link: [Arquitectura de capas](https://github.com/somospragma/bac
 │   ├── models
 │   │   └── user.model.ts
 │   └── services
-│       ├── tests
-│       │   └── unit
-│       │       └── user-memory.service.test.ts
-│       └── user-memory.service.ts
+│   │   ├── tests
+│   │   │   └── unit
+│   │   │       └── user-memory.service.test.ts
+│   │   └── user-memory.service.ts
+│   └── app.ts
+├── .gitignore
 ├── azure-pipelines.yml
+├── diagram.drawio
+├── diagram.webp
 ├── Dockerfile
 ├── jest.config.ts
 ├── LICENSE
-├── package-lock.json
 ├── package.json
 ├── README.md
 └── tsconfig.json
