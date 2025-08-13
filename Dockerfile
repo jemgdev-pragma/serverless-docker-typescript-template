@@ -18,14 +18,8 @@ COPY package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 
-RUN rm -rf ./dist/public
-RUN rm -rf ./node_modules
-
+RUN rm -rf ./dist/public && rm -rf ./node_modules
 RUN npm install --production
-
-# Env variablews
-# Server configuration
-ENV PORT=''
 
 EXPOSE 3000
 

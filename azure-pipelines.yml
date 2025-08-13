@@ -1,0 +1,107 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  AWS_REGION: 'us-east-1'
+  ECR_REPOSITORY: 'template-image-dev'
+  IMAGE_TAG: 'latest'
+  CLUSTER_NAME: 'template-cluster-dev'
+  SERVICE_NAME: 'template-ecs-service-dev'
+  ENVIRONMENT: 'dev'
+
+stages:
+  - stage: Build_And_Deploy
+    displayName: "Build and Deploy to ECS"
+    jobs:
+      - job: Deploy
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+
+          - script: docker --version
+            displayName: "Check Docker availability"
+
+          - task: AWSCLI@1
+            displayName: "Configure AWS credentials"
+            inputs:
+              awsCredentials: 'AWS-Service-Connection' # Nombre del service connection en Azure DevOps
+              regionName: $(AWS_REGION)
+
+          - script: |
+              echo "📦 Check if ECR '$(ECR_REPOSITORY)' exists..."
+              aws ecr describe-repositories --repository-names "$(ECR_REPOSITORY)" --region $(AWS_REGION) >/dev/null 2>&1 || {
+                echo "🔧 Repository not found. Creating '$(ECR_REPOSITORY)'..."
+                aws ecr create-repository --repository-name "$(ECR_REPOSITORY)" --region $(AWS_REGION)
+              }
+            displayName: "Create ECR repository if it doesn't exist"
+
+          - script: |
+              echo "🔐 Login in ECR..."
+              aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+            displayName: "Login to Amazon ECR"
+
+          - script: |
+              set -e
+              IMAGE_URI="$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(ECR_REPOSITORY):$(IMAGE_TAG)"
+              echo "🔧 Build image: $IMAGE_URI"
+              docker build -t $(ECR_REPOSITORY):$(IMAGE_TAG) .
+              docker tag $(ECR_REPOSITORY):$(IMAGE_TAG) $IMAGE_URI
+              docker push $IMAGE_URI
+            displayName: "Build, Tag, and Push Docker image to ECR"
+
+          - script: |
+              echo "🔍 Verificando existencia del servicio '$(SERVICE_NAME)' en el clúster '$(CLUSTER_NAME)'..."
+              CLUSTERS=$(aws ecs list-clusters --region "$(AWS_REGION)" --output text)
+              if ! echo "$CLUSTERS" | grep -q "$(CLUSTER_NAME)"; then
+                echo "❌ El clúster '$(CLUSTER_NAME)' no existe."
+                echo "exists=false" >> service_exists.txt
+                exit 0
+              fi
+              SERVICE_ARNS=$(aws ecs list-services --cluster "$(CLUSTER_NAME)" --region "$(AWS_REGION)" --query "serviceArns[]" --output text)
+              SERVICE_EXISTS=false
+              for ARN in $SERVICE_ARNS; do
+                SERVICE_NAME_IN_ARN=$(basename "$ARN")
+                if [ "$SERVICE_NAME_IN_ARN" = "$(SERVICE_NAME)" ]; then
+                  SERVICE_EXISTS=true
+                  break
+                fi
+              done
+              echo "exists=$SERVICE_EXISTS" >> service_exists.txt
+            displayName: "Check if ECS service exists"
+
+          - script: |
+              source service_exists.txt
+              if [ "$exists" = true ]; then
+                echo "♻️ Update ECS service..."
+                aws ecs update-service \
+                  --cluster $(CLUSTER_NAME) \
+                  --service $(SERVICE_NAME) \
+                  --force-new-deployment \
+                  --region $(AWS_REGION) || {
+                    echo "❌ Error in ECS service update."
+                    exit 1
+                  }
+              fi
+            displayName: "Update ECS Service"
+
+          - script: |
+              source service_exists.txt
+              if [ "$exists" = false ]; then
+                echo "🚀 Install Serverless CLI..."
+                npm install -g serverless@3
+                echo "📦 Deploying with Serverless..."
+                serverless deploy --config serverless/serverless.yml --verbose --stage dev \
+                  --param "port=3000" \
+                  --param "expose_port=3000" \
+                  --param "vpc_id=$(VPC_ID)" \
+                  --param "subnet_id=$(SUBNET_ID)"
+              fi
+            displayName: "Deploy using Serverless Framework"
