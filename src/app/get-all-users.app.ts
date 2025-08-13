@@ -1,4 +1,4 @@
-import { UserMemoryService } from "@services/user.memory.service";
+import { UserMemoryService } from "@services/user-memory.service";
 
 export class GetAllUsersApp {
   constructor (private readonly userService: UserMemoryService) {}
@@ -9,7 +9,7 @@ export class GetAllUsersApp {
 
       return users
     } catch (error) {
-      throw new Error('Error in list users usecase')
+      throw error
     }
   }
 }

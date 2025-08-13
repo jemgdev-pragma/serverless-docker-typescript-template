@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { UserMemoryService } from '@services/user.memory.service'
+import { UserMemoryService } from '@services/user-memory.service'
 import { GetAllUsersApp } from '@app/get-all-users.app';
 import { SaveUserApp } from '@app/save-user.app';
 

@@ -27,8 +27,7 @@
   "include": [
     "src/app.ts",
     "src/**/*.ts",
-    "**/*.test.ts",
-    "jest.config.ts"
+    "**/*.test.ts"
   ],
   "exclude": ["node_modules"]
 }

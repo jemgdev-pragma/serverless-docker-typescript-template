@@ -1,7 +1,7 @@
 import { requestSaveUserSchema } from '@config/schema/save-user.schema'
 import LambdaLogger from '@libraries/logger'
 import { UserModel } from '@models/user.model'
-import { UserMemoryService } from "@services/user.memory.service"
+import { UserMemoryService } from "@services/user-memory.service"
 
 export class SaveUserApp {
   constructor (private readonly userService: UserMemoryService) {}
