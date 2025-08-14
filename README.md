@@ -303,11 +303,11 @@ aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --
 ### 4. Publicación de la imagen en ECR
 * Etiquetar la imagen para ECR:
 ```bash
-docker tag payment-api:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/payment-api:latest
+docker tag <nombre_contenedor>:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<nombre_contenedor>:latest
 ```
 * Subir la imagen:
 ```bash
-docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/payment-api:latest
+docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<nombre_contenedor>:latest
 ```
 
 ### 5. Inicialización de Terraform
@@ -319,11 +319,11 @@ terraform init
 ### 6. Validación de la configuración Terraform
 * Etiquetar la imagen para ECR:
 ```bash
-docker tag payment-api:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/payment-api:latest
+docker tag <nombre_contenedor>:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<nombre_contenedor>:latest
 ```
 * Subir la imagen:
 ```bash
-docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/payment-api:latest
+docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<nombre_contenedor>:latest
 ```
 
 ### 7. Aplicar la infraestructura con Terraform
@@ -341,15 +341,15 @@ Terraform desplegará:
 
 ### 8. Verificación del servicio ECS
 * Revisar en la consola ECS que el cluster y el servicio estén activos y que los contenedores estén en `RUNNING`.
-* Revisar los CloudWatch Logs de `/ecs/payment-api` para verificar que la aplicación esté iniciando correctamente.
+* Revisar los CloudWatch Logs de `/ecs/<nombre_contenedor>` para verificar que la aplicación esté iniciando correctamente.
 
 ### 9. Actualización del servicio ECS
 Si se realiza un cambio en la imagen Docker:
 ```bash
 # Reconstruir y subir nueva imagen
-docker build -t payment-api:latest .
-docker tag payment-api:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/payment-api:latest
-docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/payment-api:latest
+docker build -t <nombre_contenedor>:latest .
+docker tag <nombre_contenedor>:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<nombre_contenedor>:latest
+docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/<nombre_contenedor>:latest
 
 # Forzar redeploy de ECS
 terraform apply
