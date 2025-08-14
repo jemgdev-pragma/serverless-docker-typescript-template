@@ -17,8 +17,11 @@ Antes de clonar el repositorio, asegurate de tener las siguientes herramientas p
 
 - [Instalar Docker](https://www.docker.com/get-started)
 - [Instalar Serverless Framework](https://www.serverless.com/framework/docs/getting-started)
+- [Instalar Terraform](https://developer.hashicorp.com/terraform/install)
 - [Instalar Node.js y npm](https://nodejs.org/en/)
 - [Instalar git](https://git-scm.com/)
+
+Nota: No es necesario instalar tanto Serverless Framework como Terraform juntos, solo basta con instalar el que se vaya a utilizar en el proyecto.
 
 ## Instalación
 
