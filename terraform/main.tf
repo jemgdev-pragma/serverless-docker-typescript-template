@@ -69,6 +69,15 @@ module "alb" {
 module "vpc_link" {
   source = "./modules/vpc-link-terraform"
 
+  terraform {
+    required_providers {
+      aws = {
+        source  = "hashicorp/aws"
+        version = "~> 5.0"
+      }
+    }
+  }
+
   providers = {
     aws.project = aws.project
   }
@@ -213,7 +222,7 @@ resource "aws_cloudwatch_log_group" "ecs_mi_app" {
 # IAM Roles para ECS (Módulo existente)
 # ======================
 module "iam_roles_ecs" {
-  source = "./modules/iam-terraform" # ruta a tu módulo
+  source = "./modules/cloudops-ref-repo-aws-iam-terraform"
   providers = {
     aws.project = aws.project
   }
