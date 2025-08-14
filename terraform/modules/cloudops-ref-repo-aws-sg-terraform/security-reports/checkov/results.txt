@@ -1,0 +1,127 @@
+Check: CKV_AWS_23: "Ensure every security groups rule has a description"
+	PASSED for resource: aws_security_group.sg["web"]
+	File: /terraform/main.tf:1-25
+	Guide: https://docs.bridgecrew.io/docs/ensure-every-security-groups-rule-has-a-description
+
+Check: CKV_AWS_23: "Ensure every security groups rule has a description"
+	PASSED for resource: aws_security_group.sg["app"]
+	File: /terraform/main.tf:26-50
+	Guide: https://docs.bridgecrew.io/docs/ensure-every-security-groups-rule-has-a-description
+
+Check: CKV_AWS_24: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22"
+	PASSED for resource: aws_security_group.sg["web"]
+	File: /terraform/main.tf:1-25
+	Guide: https://docs.bridgecrew.io/docs/networking_1-port-security
+
+Check: CKV_AWS_24: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22"
+	PASSED for resource: aws_security_group.sg["app"]
+	File: /terraform/main.tf:26-50
+	Guide: https://docs.bridgecrew.io/docs/networking_1-port-security
+
+Check: CKV_AWS_25: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389"
+	PASSED for resource: aws_security_group.sg["web"]
+	File: /terraform/main.tf:1-25
+	Guide: https://docs.bridgecrew.io/docs/networking_2-port-security
+
+Check: CKV_AWS_25: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389"
+	PASSED for resource: aws_security_group.sg["app"]
+	File: /terraform/main.tf:26-50
+	Guide: https://docs.bridgecrew.io/docs/networking_2-port-security
+
+Check: CKV_AWS_260: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80"
+	FAILED for resource: aws_security_group.sg["web"]
+	File: /terraform/main.tf:1-25
+	Guide: https://docs.bridgecrew.io/docs/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-80
+
+		1 | resource "aws_security_group" "sg" {
+		2 |   for_each    = var.sg_config
+		3 |   name        = local.sg_names[each.key]
+		4 |   description = each.value.description
+		5 |   vpc_id      = each.value.vpc_id
+		6 | 
+		7 |   dynamic "ingress" {
+		8 |     for_each = each.value.ingress
+		9 |     content {
+		10 |       from_port        = ingress.value.from_port
+		11 |       to_port          = ingress.value.to_port
+		12 |       protocol         = ingress.value.protocol
+		13 |       cidr_blocks      = ingress.value.cidr_blocks
+		14 |       security_groups  = local.sg_references[each.key][ingress.key]
+		15 |       prefix_list_ids  = ingress.value.prefix_list_ids
+		16 |       self             = ingress.value.self
+		17 |       description      = ingress.value.description
+		18 |     }
+		19 |   }
+		20 | 
+		21 |   tags = merge(
+		22 |     { Name = local.sg_names[each.key] },
+		23 |     var.additional_tags,
+		24 |     each.value.additional_tags
+		25 |   )
+		26 | }
+
+Check: CKV_AWS_260: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80"
+	PASSED for resource: aws_security_group.sg["app"]
+	File: /terraform/main.tf:26-50
+	Guide: https://docs.bridgecrew.io/docs/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-80
+
+Check: CKV_AWS_277: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 443"
+	FAILED for resource: aws_security_group.sg["web"]
+	File: /terraform/main.tf:1-25
+	Guide: https://docs.bridgecrew.io/docs/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-443
+
+		1 | resource "aws_security_group" "sg" {
+		2 |   for_each    = var.sg_config
+		3 |   name        = local.sg_names[each.key]
+		4 |   description = each.value.description
+		5 |   vpc_id      = each.value.vpc_id
+		6 | 
+		7 |   dynamic "ingress" {
+		8 |     for_each = each.value.ingress
+		9 |     content {
+		10 |       from_port        = ingress.value.from_port
+		11 |       to_port          = ingress.value.to_port
+		12 |       protocol         = ingress.value.protocol
+		13 |       cidr_blocks      = ingress.value.cidr_blocks
+		14 |       security_groups  = local.sg_references[each.key][ingress.key]
+		15 |       prefix_list_ids  = ingress.value.prefix_list_ids
+		16 |       self             = ingress.value.self
+		17 |       description      = ingress.value.description
+		18 |     }
+		19 |   }
+		20 | 
+		21 |   tags = merge(
+		22 |     { Name = local.sg_names[each.key] },
+		23 |     var.additional_tags,
+		24 |     each.value.additional_tags
+		25 |   )
+		26 | }
+
+Check: CKV_AWS_277: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 443"
+	PASSED for resource: aws_security_group.sg["app"]
+	File: /terraform/main.tf:26-50
+	Guide: https://docs.bridgecrew.io/docs/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-443
+
+Check: CKV_AWS_260: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80"
+	SKIPPED for resource: aws_security_group_rule.ingress_rules
+	File: /terraform/main.tf:51-75
+	Guide: https://docs.bridgecrew.io/docs/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-80
+
+Check: CKV_AWS_277: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 443"
+	SKIPPED for resource: aws_security_group_rule.ingress_rules
+	File: /terraform/main.tf:51-75
+	Guide: https://docs.bridgecrew.io/docs/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-443
+
+Check: CKV_AWS_23: "Ensure every security groups rule has a description"
+	PASSED for resource: aws_security_group_rule.ingress_rules
+	File: /terraform/main.tf:51-75
+	Guide: https://docs.bridgecrew.io/docs/ensure-every-security-groups-rule-has-a-description
+
+Check: CKV_AWS_23: "Ensure every security groups rule has a description"
+	PASSED for resource: aws_security_group_rule.egress_rules
+	File: /terraform/main.tf:76-100
+	Guide: https://docs.bridgecrew.io/docs/ensure-every-security-groups-rule-has-a-description
+
+Passed checks: 10, Failed checks: 2, Skipped checks: 2
+
+Note: The failed checks are expected as the example intentionally allows HTTP and HTTPS traffic from 0.0.0.0/0 for demonstration purposes. In a production environment, these should be restricted to specific IP ranges when possible.
