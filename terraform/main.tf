@@ -81,7 +81,7 @@ module "alb" {
 # VPC Link (Módulo propio)
 # ======================
 module "vpc_link" {
-  source = "./modules/vpc_link"
+  source = "./modules/vpc-link-terraform"
 
   providers = {
     aws.project = aws.project
@@ -92,7 +92,6 @@ module "vpc_link" {
   tags           = var.common_tags
   depends_on = [module.alb]
 }
-
 
 # ======================
 # API Gateway (módulo existente)
@@ -142,7 +141,7 @@ module "ecs_cluster" {
   }
 
   providers = {
-    aws.project = aws
+    aws.project = aws.project
   }
 }
 
@@ -201,3 +200,136 @@ module "ecr" {
   }
 }
 
+# ======================
+# CloudWatch Log Group para ECS (Módulo propio)
+# ======================
+resource "aws_cloudwatch_log_group" "ecs_mi_app" {
+  name              = "/ecs/${var.client}-${var.project}-${var.environment}-${var.application}"
+  retention_in_days = 30
+  skip_destroy      = false
+
+  tags = {
+    Name        = "${var.client}-${var.project}-${var.environment}-${var.application}-logs"
+    Environment = var.environment
+    Project     = var.project
+    Client      = var.client
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# ======================
+# ECS Service + Task (módulo existente)
+# ======================
+module "ecs_service_mi_app" {
+  source = "./modules/cloudops-ref-repo-aws-ecs-service-terraform"
+
+  providers = {
+    aws.project = aws.project
+  }
+
+  client       = var.client
+  project      = var.project
+  environment  = var.environment
+  application  = var.application
+
+  ecs_config = {
+    cpu                 = "256"
+    memory              = "512"
+    execution_role_arn = module.iam_roles_ecs.iam_roles_info["ecs-exec-mi-app-ecs"].role_arn
+    task_role_arn      = module.iam_roles_ecs.iam_roles_info["ecs-task-mi-app-ecs"].role_arn
+
+    # ECR repositorio creado por el módulo ECR
+    ecr_functionality   = "app1"
+    image_tag           = "latest"
+
+    container_port      = 3000
+
+    # CloudWatch Logs (puedes declararlo antes como recurso o módulo)
+    log_group           = aws_cloudwatch_log_group.ecs_mi_app.name
+
+    # ECS Cluster desde módulo
+    cluster_arn         = module.ecs_cluster.cluster_arns["myapp"]
+
+    desired_count       = 1
+    subnets             = var.private_subnets
+
+    # Security group del ALB o específico para ECS
+    security_groups     = [module.security_groups.ecs_sg_id]
+
+    # Target Group desde módulo ALB
+    target_group_arn    = module.alb.target_group_arns["ecs_service"]
+  }
+
+  depends_on = [
+    module.ecs_cluster,
+    module.ecr,
+    module.alb,
+    aws_cloudwatch_log_group.ecs_mi_app
+  ]
+}
+
+# ======================
+# IAM Roles para ECS (Módulo existente)
+# ======================
+module "iam_roles_ecs" {
+  source = "./modules/iam-terraform" # ruta a tu módulo
+  providers = {
+    aws.project = aws.project
+  }
+
+  client      = var.client
+  project     = var.project
+  environment = var.environment
+
+  iam_config = [
+    # Execution Role
+    {
+      functionality        = "ecs-exec"
+      application          = "mi-app"
+      service              = "ecs"
+      path                 = "/"
+      type                 = "Service"
+      identifiers          = ["ecs-tasks.amazonaws.com"]
+      principal_conditions = []
+      managed_policy_arns  = [
+        "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+        "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      ]
+      policies = []
+    },
+
+    # Task Role
+    {
+      functionality        = "ecs-task"
+      application          = "mi-app"
+      service              = "ecs"
+      path                 = "/"
+      type                 = "Service"
+      identifiers          = ["ecs-tasks.amazonaws.com"]
+      principal_conditions = []
+      managed_policy_arns  = []
+      policies = [
+        {
+          policy_description = "Permitir enviar logs a CloudWatch"
+          policy_statements = [
+            {
+              sid       = "CloudWatchLogsAccess"
+              actions   = [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ]
+              resources = ["*"]
+              effect    = "Allow"
+              condition = []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+
+  depends_on = [aws_cloudwatch_log_group.ecs_mi_app]
+}
