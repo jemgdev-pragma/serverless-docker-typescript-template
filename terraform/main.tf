@@ -1,18 +1,3 @@
-terraform {
-  required_version = ">= 1.5.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  alias  = "project"
-  region = var.aws_region
-}
-
 # ======================
 # Security Groups (Módulo existente)
 # ======================
@@ -31,7 +16,8 @@ module "security_groups" {
 # ALB privado (Módulo existente)
 # ======================
 module "alb" {
-  source    = "./modules/cloudops-ref-repo-aws-elb-terraform" # tu módulo existente
+  source    = "./modules/cloudops-ref-repo-aws-elb-terraform"
+
   providers = {
     aws.project = aws.project
   }
@@ -98,7 +84,7 @@ module "vpc_link" {
 # ======================
 module "api_gateway" {
   source = "./modules/cloudops-ref-repo-aws-api-terraform"
-  
+
   providers = {
     aws.project = aws.project
   }
@@ -129,6 +115,10 @@ module "api_gateway" {
 module "ecs_cluster" {
   source = "./modules/cloudops-ref-repo-aws-ecs-cluster-terraform"
 
+  providers = {
+    aws.project = aws.project
+  }
+
   cluster_config = {
     myapp = {
       containerInsights      = "enabled"
@@ -138,10 +128,6 @@ module "ecs_cluster" {
         Owner       = "team-backend"
       }
     }
-  }
-
-  providers = {
-    aws.project = aws.project
   }
 }
 
@@ -204,6 +190,9 @@ module "ecr" {
 # CloudWatch Log Group para ECS (Módulo propio)
 # ======================
 resource "aws_cloudwatch_log_group" "ecs_mi_app" {
+  providers = {
+    aws.project = aws.project
+  }
   name              = "/ecs/${var.client}-${var.project}-${var.environment}-${var.application}"
   retention_in_days = 30
   skip_destroy      = false
@@ -218,57 +207,6 @@ resource "aws_cloudwatch_log_group" "ecs_mi_app" {
   lifecycle {
     prevent_destroy = false
   }
-}
-
-# ======================
-# ECS Service + Task (módulo existente)
-# ======================
-module "ecs_service_mi_app" {
-  source = "./modules/cloudops-ref-repo-aws-ecs-service-terraform"
-
-  providers = {
-    aws.project = aws.project
-  }
-
-  client       = var.client
-  project      = var.project
-  environment  = var.environment
-  application  = var.application
-
-  ecs_config = {
-    cpu                 = "256"
-    memory              = "512"
-    execution_role_arn = module.iam_roles_ecs.iam_roles_info["ecs-exec-mi-app-ecs"].role_arn
-    task_role_arn      = module.iam_roles_ecs.iam_roles_info["ecs-task-mi-app-ecs"].role_arn
-
-    # ECR repositorio creado por el módulo ECR
-    ecr_functionality   = "app1"
-    image_tag           = "latest"
-
-    container_port      = 3000
-
-    # CloudWatch Logs (puedes declararlo antes como recurso o módulo)
-    log_group           = aws_cloudwatch_log_group.ecs_mi_app.name
-
-    # ECS Cluster desde módulo
-    cluster_arn         = module.ecs_cluster.cluster_arns["myapp"]
-
-    desired_count       = 1
-    subnets             = var.private_subnets
-
-    # Security group del ALB o específico para ECS
-    security_groups     = [module.security_groups.ecs_sg_id]
-
-    # Target Group desde módulo ALB
-    target_group_arn    = module.alb.target_group_arns["ecs_service"]
-  }
-
-  depends_on = [
-    module.ecs_cluster,
-    module.ecr,
-    module.alb,
-    aws_cloudwatch_log_group.ecs_mi_app
-  ]
 }
 
 # ======================
@@ -331,5 +269,62 @@ module "iam_roles_ecs" {
     }
   ]
 
-  depends_on = [aws_cloudwatch_log_group.ecs_mi_app]
+  depends_on = [
+    module.ecs_cluster,
+    module.ecr,
+    module.alb,
+    module.iam_roles_ecs,
+    aws_cloudwatch_log_group.ecs_mi_app
+  ]
+}
+
+# ======================
+# ECS Service + Task (módulo existente)
+# ======================
+module "ecs_service_mi_app" {
+  source = "./modules/cloudops-ref-repo-aws-ecs-service-terraform"
+
+  providers = {
+    aws.project = aws.project
+  }
+
+  client       = var.client
+  project      = var.project
+  environment  = var.environment
+  application  = var.application
+
+  ecs_config = {
+    cpu                 = "256"
+    memory              = "512"
+    execution_role_arn = module.iam_roles_ecs.iam_roles_info["ecs-exec-mi-app-ecs"].role_arn
+    task_role_arn      = module.iam_roles_ecs.iam_roles_info["ecs-task-mi-app-ecs"].role_arn
+
+    # ECR repositorio creado por el módulo ECR
+    ecr_functionality   = "app1"
+    image_tag           = "latest"
+
+    container_port      = 3000
+
+    # CloudWatch Logs (puedes declararlo antes como recurso o módulo)
+    log_group           = aws_cloudwatch_log_group.ecs_mi_app.name
+
+    # ECS Cluster desde módulo
+    cluster_arn         = module.ecs_cluster.cluster_arns["myapp"]
+
+    desired_count       = 1
+    subnets             = var.private_subnets
+
+    # Security group del ALB o específico para ECS
+    security_groups     = [module.security_groups.ecs_sg_id]
+
+    # Target Group desde módulo ALB
+    target_group_arn    = module.alb.target_group_arns["ecs_service"]
+  }
+
+  depends_on = [
+    module.ecs_cluster,
+    module.ecr,
+    module.alb,
+    aws_cloudwatch_log_group.ecs_mi_app
+  ]
 }
