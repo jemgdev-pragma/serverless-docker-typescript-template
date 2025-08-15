@@ -9,7 +9,7 @@ Aplicación express con Serverless Framework y Terraform para la creación y des
 
 #### Arquitectura generada por Terraform
 
-![Arquitectura de la solución por Terraform](./terraform-diagram.webp)
+![Arquitectura de la solución por Terraform](./terraform-diagram.jpg)
 
 ## Requisitos de sistema
 

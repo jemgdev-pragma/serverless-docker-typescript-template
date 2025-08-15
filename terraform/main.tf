@@ -10,6 +10,127 @@ module "security_groups" {
 
   vpc_id = var.vpc_id
   tags   = var.common_tags
+  client      = var.client
+  project     = var.project
+  environment = var.environment
+
+  sg_config = {
+    "elb" = {
+      service     = "alb"
+      application = "tutorias"
+      description = "Security group for alb tutorias"
+      vpc_id      = data.aws_vpc.vpc.id
+      additional_tags = {
+        application-tier = "backend"
+      }
+
+      ingress = [
+        {
+          from_port       = 8080
+          to_port         = 8080
+          protocol        = "tcp"
+          cidr_blocks     = ["0.0.0.0/0"]
+          security_groups = []
+          prefix_list_ids = []
+          self            = false
+          description     = "Allow HTTP inbound"
+        }
+      ]
+
+      egress = [
+        {
+          from_port       = 0
+          to_port         = 0
+          protocol        = "-1"
+          cidr_blocks     = ["0.0.0.0/0"]
+          prefix_list_ids = []
+          security_groups = []
+          self            = false
+          description     = "Allow all outbound traffic"
+        }
+      ]
+    },
+    "ecs" = {
+      service     = "ecs"
+      application = "tutorias"
+      description = "Security group for ecs tutorias"
+      vpc_id      = data.aws_vpc.vpc.id
+      additional_tags = {
+        application-tier = "tutorias"
+      }
+
+      ingress = [
+        {
+          from_port       = 8080
+          to_port         = 8080
+          protocol        = "tcp"
+          cidr_blocks     = []
+          security_groups = ["elb"]
+          prefix_list_ids = []
+          self            = false
+          description     = "Allow traffic on port 7008 from ALB delivery"
+        },
+        {
+          from_port       = 8080
+          to_port         = 8080
+          protocol        = "tcp"
+          cidr_blocks     = []
+          security_groups = []
+          prefix_list_ids = []
+          self            = true
+          description     = "Allow traffic on port 7008 from the same security group delivery"
+        }
+      ]
+
+      egress = [
+        {
+          from_port       = 0
+          to_port         = 0
+          protocol        = "-1"
+          cidr_blocks     = ["0.0.0.0/0"]
+          prefix_list_ids = []
+          security_groups = []
+          self            = false
+          description     = "Allow all outbound traffic"
+        }
+      ]
+    }
+    "rds" = {
+      service     = "rds"
+      application = "mysql"
+      description = "Security group for Aurora Mysql"
+      vpc_id      = data.aws_vpc.vpc.id
+      additional_tags = {
+        application-tier = "database"
+      }
+
+      ingress = [
+        {
+          from_port       = 3306
+          to_port         = 3306
+          protocol        = "tcp"
+          cidr_blocks     = []
+          security_groups = ["ecs"]
+          prefix_list_ids = []
+          self            = false
+          description     = "Allow Mysql traffic from ECS security group"
+        }
+      ]
+
+      egress = [
+        {
+          from_port       = 0
+          to_port         = 0
+          protocol        = "-1"
+          cidr_blocks     = ["0.0.0.0/0"]
+          prefix_list_ids = []
+          security_groups = []
+          self            = false
+          description     = "Allow all outbound traffic"
+        }
+      ]
+    }
+  }
 }
 
 # ======================
