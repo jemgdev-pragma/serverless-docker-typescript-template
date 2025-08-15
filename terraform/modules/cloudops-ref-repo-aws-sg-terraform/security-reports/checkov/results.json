@@ -1,0 +1,57 @@
+{
+  "results": {
+    "passed_checks": [
+      {
+        "check_id": "CKV_AWS_23",
+        "check_name": "Ensure every security groups rule has a description",
+        "check_result": {
+          "result": "PASSED"
+        },
+        "resource": "aws_security_group.sg[\"web\"]"
+      },
+      {
+        "check_id": "CKV_AWS_24",
+        "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+        "check_result": {
+          "result": "PASSED"
+        },
+        "resource": "aws_security_group.sg[\"web\"]"
+      },
+      {
+        "check_id": "CKV_AWS_25",
+        "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389",
+        "check_result": {
+          "result": "PASSED"
+        },
+        "resource": "aws_security_group.sg[\"web\"]"
+      }
+    ],
+    "failed_checks": [
+      {
+        "check_id": "CKV_AWS_260",
+        "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80",
+        "check_result": {
+          "result": "FAILED"
+        },
+        "resource": "aws_security_group.sg[\"web\"]"
+      },
+      {
+        "check_id": "CKV_AWS_277",
+        "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 443",
+        "check_result": {
+          "result": "FAILED"
+        },
+        "resource": "aws_security_group.sg[\"web\"]"
+      }
+    ],
+    "skipped_checks": []
+  },
+  "summary": {
+    "passed": 10,
+    "failed": 2,
+    "skipped": 2,
+    "parsing_errors": 0,
+    "resource_count": 4,
+    "checkov_version": "2.3.259"
+  }
+}
